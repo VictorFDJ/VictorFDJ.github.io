@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Regresión Lineal - Precios de Apartamentos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .result-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .result-card h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        
+        .equation {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            margin: 30px 0;
+        }
+        
+        .chart-container h3 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-item {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            margin: 30px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .confidence-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%);
+            transition: width 2s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Análisis de Regresión Lineal</h1>
+            <p>Predicción de Precios de Apartamentos</p>
+        </div>
+        
+        <div class="content">
+            <!-- Resultados principales -->
+            <div class="results-grid fade-in">
+                <div class="result-card">
+                    <h3>🔢 Ecuación de la Función</h3>
+                    <div class="equation">y = 557.24x + 4,429.15</div>
+                    <p>Donde:</p>
+                    <p>• y = Precio ($US)</p>
+                    <p>• x = Tamaño (m²)</p>
+                </div>
+                
+                <div class="result-card">
+                    <h3>💰 Parámetros Económicos</h3>
+                    <p><strong>Precio por m²:</strong></p>
+                    <div class="stat-value">$557.24</div>
+                    <p><strong>Costo inicial:</strong></p>
+                    <div class="stat-value">$4,429.15</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>📈 Confiabilidad del Modelo</h3>
+                    <p><strong>R² =</strong> <span class="stat-value">0.9779</span></p>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: 97.79%"></div>
+                    </div>
+                    <p><strong>97.79% de confiabilidad</strong></p>
+                </div>
+            </div>
+            
+            <!-- Gráfico -->
+            <div class="chart-container fade-in">
+                <h3>📊 Diagrama de Dispersión y Línea de Regresión</h3>
+                <canvas id="regressionChart" width="400" height="200"></canvas>
+            </div>
+            
+            <!-- Estadísticas descriptivas -->
+            <div class="chart-container fade-in">
+                <h3>📊 Estadísticas Descriptivas de Precios</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <h4>Media</h4>
+                        <div class="stat-value">$94,512</div>
+                    </div>
+                    <div class="stat-item">
+                        <h4>Mediana</h4>
+                        <div class="stat-value">$95,032</div>
+                    </div>
+                    <div class="stat-item">
+                        <h4>Moda</h4>
+                        <div style="font-size: 0.9em;">No hay moda</div>
+                        <div style="font-size: 0.8em;">(todos únicos)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabla de datos -->
+            <div class="table-container fade-in">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Apartamento</th>
+                            <th>Tamaño (m²)</th>
+                            <th>Precio Real ($US)</th>
+                            <th>Precio Predicho ($US)</th>
+                            <th>Error Absoluto ($US)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTable">
+                        <!-- Se llena con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos originales
+        const data = [
+            { size: 85, price: 51100 },
+            { size: 97, price: 59260 },
+            { size: 120, price: 69700 },
+            { size: 145, price: 88985 },
+            { size: 150, price: 91160 },
+            { size: 151, price: 92663 },
+            { size: 163, price: 97900 },
+            { size: 165, price: 99925 },
+            { size: 168, price: 100900 },
+            { size: 191, price: 113745 },
+            { size: 214, price: 127430 },
+            { size: 240, price: 142280 }
+        ];
+
+        // Coeficientes de regresión calculados
+        const m = 557.24;
+        const b = 4429.15;
+
+        // Función para predecir precio
+        function predictPrice(size) {
+            return m * size + b;
+        }
+
+        // Llenar tabla
+        const tableBody = document.getElementById('dataTable');
+        data.forEach((item, index) => {
+            const predicted = predictPrice(item.size);
+            const error = Math.abs(item.price - predicted);
+            
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.size}</td>
+                <td>$${item.price.toLocaleString()}</td>
+                <td>$${Math.round(predicted).toLocaleString()}</td>
+                <td>$${Math.round(error).toLocaleString()}</td>
+            `;
+        });
+
+        // Crear gráfico
+        const ctx = document.getElementById('regressionChart').getContext('2d');
+        
+        // Datos para la línea de regresión
+        const minSize = Math.min(...data.map(d => d.size));
+        const maxSize = Math.max(...data.map(d => d.size));
+        const regressionLine = [];
+        for (let size = minSize; size <= maxSize; size += 5) {
+            regressionLine.push({
+                x: size,
+                y: predictPrice(size)
+            });
+        }
+
+        new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Datos Reales',
+                    data: data.map(d => ({ x: d.size, y: d.price })),
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    pointRadius: 8,
+                    pointHoverRadius: 12
+                }, {
+                    label: 'Línea de Regresión',
+                    data: regressionLine,
+                    type: 'line',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Relación entre Tamaño y Precio de Apartamentos'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Tamaño (m²)'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Precio ($US)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + (value/1000).toFixed(0) + 'k';
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'nearest'
+                }
+            }
+        });
+
+        // Animación de entrada
+        setTimeout(() => {
+            document.querySelectorAll('.fade-in').forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+        }, 100);
+    </script>
+</body>
+</html>
