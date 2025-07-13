@@ -3,384 +3,670 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análisis de Regresión Lineal - Precios de Apartamentos</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <title>Algoritmos de Búsqueda en Grafos - Ejercicio 3</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            color: #333;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
             overflow: hidden;
         }
-        
+
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
+            padding: 40px;
             text-align: center;
-            padding: 40px 20px;
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 255, 255, 0.1) 10px,
+                rgba(255, 255, 255, 0.1) 20px
+            );
+            animation: slide 20s linear infinite;
+        }
+
+        @keyframes slide {
+            0% { transform: translateX(-50px); }
+            100% { transform: translateX(50px); }
+        }
+
         .header h1 {
             font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
         }
-        
-        .header p {
-            font-size: 1.2em;
+
+        .student-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .student-info h2 {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+
+        .student-info p {
+            font-size: 1.1em;
             opacity: 0.9;
         }
-        
-        .content {
+
+        .problem-info {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .problem-info h2 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .route-info {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .route-box {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .algorithms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
             padding: 40px;
         }
-        
-        .results-grid {
+
+        .algorithm-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .algorithm-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .algorithm-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--card-color);
+        }
+
+        .dfs-card { --card-color: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+        .bfs-card { --card-color: linear-gradient(135deg, #4ecdc4, #44bd87); }
+        .ucs-card { --card-color: linear-gradient(135deg, #a55eea, #26de81); }
+
+        .algorithm-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .algorithm-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--card-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .algorithm-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .algorithm-subtitle {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h4 {
+            color: #555;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .nodes-explored {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .node {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .frontier-steps {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .frontier-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-number {
+            background: var(--card-color);
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .final-route {
+            background: linear-gradient(135deg, #ffeaa7, #fab1a0);
+            color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .final-route::before {
+            content: '🎯';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5em;
+        }
+
+        .tree-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .tree-container pre {
+            margin: 0;
+            color: #333;
+        }
+
+        .conclusion {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .conclusion h2 {
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .conclusion-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 30px;
-            margin-bottom: 40px;
+            margin-top: 30px;
         }
-        
-        .result-card {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 30px;
+
+        .conclusion-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
             border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            text-align: center;
-            transform: translateY(0);
-            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
-        .result-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .result-card h3 {
-            font-size: 1.5em;
-            margin-bottom: 15px;
-        }
-        
-        .equation {
-            background: rgba(255,255,255,0.2);
-            padding: 15px;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
+
+        .conclusion-card h3 {
             font-size: 1.3em;
-            font-weight: bold;
-            margin: 15px 0;
+            margin-bottom: 15px;
+            color: #ffeaa7;
         }
-        
-        .stat-value {
-            font-size: 2em;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        
-        .chart-container {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            margin: 30px 0;
-        }
-        
-        .chart-container h3 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-        
-        .stat-item {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+
+        .cost-highlight {
+            background: linear-gradient(135deg, #fd79a8, #fdcb6e);
             color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        
-        .table-container {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            margin: 30px 0;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th, td {
-            padding: 12px;
-            text-align: center;
-            border-bottom: 1px solid #eee;
-        }
-        
-        th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
             font-weight: bold;
+            display: inline-block;
+            margin: 5px 0;
         }
-        
-        tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-        
-        .confidence-bar {
-            width: 100%;
-            height: 20px;
-            background: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 15px 0;
-        }
-        
-        .confidence-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%);
-            transition: width 2s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.8s ease forwards;
+
+        @media (max-width: 768px) {
+            .algorithms-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .route-info {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Análisis de Regresión Lineal</h1>
-            <p>Predicción de Precios de Apartamentos</p>
-            <p>Victor Manuel Fernandez de Jesus (2024-0214)</p>
+            <h1>🔍 Algoritmos de Búsqueda en Grafos</h1>
+            <div class="student-info">
+                <h2>Victor Manuel Fernandez de Jesus</h2>
+                <p>Matrícula: 2024-0214</p>
+            </div>
         </div>
-        
-        <div class="content">
-            <!-- Resultados principales -->
-            <div class="results-grid fade-in">
-                <div class="result-card">
-                    <h3>🔢 Ecuación de la Función</h3>
-                    <div class="equation">y = 557.24x + 4,429.15</div>
-                    <p>Donde:</p>
-                    <p>• y = Precio ($US)</p>
-                    <p>• x = Tamaño (m²)</p>
+
+        <div class="problem-info">
+            <h2>Ejercicio de Búsqueda en Grafos - Grafo 3</h2>
+            <div class="route-info">
+                <div class="route-box">🚀 Partida: Nodo 11</div>
+                <div class="route-box">🎯 Destino: Nodo 6</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; padding: 40px; background: white;">
+            <h3 style="margin-bottom: 30px; color: #333; font-size: 1.5em;">📊 Representación del Grafo</h3>
+            <img src="img/image.png" alt="grafo">
+        <div class="algorithms-grid">
+            <!-- DFS Card -->
+            <div class="algorithm-card dfs-card">
+                <div class="algorithm-header">
+                    <div class="algorithm-icon">D</div>
+                    <div>
+                        <div class="algorithm-title">DFS</div>
+                        <div class="algorithm-subtitle">Depth First Search</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h4>🔍 Nodos Explorados</h4>
+                    <div class="nodes-explored">
+                        <div class="node">11</div>
+                        <div class="node">10</div>
+                        <div class="node">4</div>
+                        <div class="node">9</div>
+                        <div class="node">3</div>
+                        <div class="node">6</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h4>📚 Frontera (Stack)</h4>
+                    <div class="frontier-steps">
+                        <div class="frontier-step">
+                            <div class="step-number">1</div>
+                            <div>[11]</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">2</div>
+                            <div>[4, 10]</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">3</div>
+                            <div>[2, 3, 5, 8, 9]</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">4</div>
+                            <div>[2, 3, 5, 8]</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">5</div>
+                            <div>[2, 3, 5]</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">6</div>
+                            <div>[2, 3]</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="final-route">
+                    11 → 4 → 9 → 3 → 6
+                </div>
+
+                <div class="section">
+                    <h4>🌳 Árbol de Búsqueda</h4>
+                    <div class="tree-container">
+                        <pre>11
+└── 4
+    ├── 9
+    │   └── 3
+    │       └── 6
+    ├── 2
+    ├── 3
+    ├── 5
+    └── 8</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BFS Card -->
+            <div class="algorithm-card bfs-card">
+                <div class="algorithm-header">
+                    <div class="algorithm-icon">B</div>
+                    <div>
+                        <div class="algorithm-title">BFS</div>
+                        <div class="algorithm-subtitle">Breadth First Search</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h4>🔍 Nodos Explorados</h4>
+                    <div class="nodes-explored">
+                        <div class="node">11</div>
+                        <div class="node">4</div>
+                        <div class="node">10</div>
+                        <div class="node">2</div>
+                        <div class="node">3</div>
+                        <div class="node">6</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h4>📋 Frontera (Queue)</h4>
+                    <div class="frontier-steps">
+                        <div class="frontier-step">
+                            <div class="step-number">1</div>
+                            <div>[11]</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">2</div>
+                            <div>[4, 10]</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">3</div>
+                            <div>[10, 2, 3, 5, 8, 9]</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">4</div>
+                            <div>[2, 3, 5, 8, 9]</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">5</div>
+                            <div>[3, 5, 8, 9]</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">6</div>
+                            <div>[5, 8, 9, 1, 6, 7]</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="final-route">
+                    11 → 4 → 3 → 6
+                </div>
+
+                <div class="section">
+                    <h4>🌳 Árbol de Búsqueda</h4>
+                    <div class="tree-container">
+                        <pre>11
+└── 4
+    ├── 2
+    ├── 3
+    │   └── 6
+    ├── 5
+    ├── 8
+    └── 9</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UCS Card -->
+            <div class="algorithm-card ucs-card">
+                <div class="algorithm-header">
+                    <div class="algorithm-icon">U</div>
+                    <div>
+                        <div class="algorithm-title">UCS</div>
+                        <div class="algorithm-subtitle">Uniform Cost Search</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h4>🔍 Nodos Explorados</h4>
+                    <div class="nodes-explored">
+                        <div class="node">11</div>
+                        <div class="node">4</div>
+                        <div class="node">5</div>
+                        <div class="node">2</div>
+                        <div class="node">9</div>
+                        <div class="node">0</div>
+                        <div class="node">3</div>
+                        <div class="node">6</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h4>⚖️ Frontera (Cola de Prioridad)</h4>
+                    <div class="frontier-steps">
+                        <div class="frontier-step">
+                            <div class="step-number">1</div>
+                            <div>(5, 4), (10, 10)</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">2</div>
+                            <div>(6, 5), (10, 10)</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">3</div>
+                            <div>(7, 2), (10, 3), (14, 8)</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">4</div>
+                            <div>(7, 9)</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">5</div>
+                            <div>(8, 0)</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">6</div>
+                            <div>(10, 3)</div>
+                        </div>
+                        <div class="frontier-step">
+                            <div class="step-number">7</div>
+                            <div>(16, 6)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="final-route">
+                    11 → 4 → 5 → 3 → 6
+                    <div class="cost-highlight">Costo Total: 16</div>
+                </div>
+
+                <div class="section">
+                    <h4>🌳 Árbol de Búsqueda</h4>
+                    <div class="tree-container">
+                        <pre>11
+└── 4 (costo 5)
+    ├── 5 (costo 6)
+    │   └── 3 (costo 10)
+    │       └── 6 (costo 16)
+    ├── 2 (costo 7)
+    ├── 9 (costo 7)
+    ├── 8 (costo 14)
+    └── 10 (costo 10)</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="conclusion">
+            <h2>🎉 Conclusión</h2>
+            <p>Los tres algoritmos encuentran rutas distintas con diferentes características:</p>
+            
+            <div class="conclusion-grid">
+                <div class="conclusion-card">
+                    <h3>🔍 DFS</h3>
+                    <p>Explora profundo en el grafo, encuentra una ruta válida sin optimizar el costo. Utiliza una estructura de datos tipo Stack (LIFO).</p>
                 </div>
                 
-                <div class="result-card">
-                    <h3>💰 Parámetros Económicos</h3>
-                    <p><strong>Precio por m²:</strong></p>
-                    <div class="stat-value">$557.24</div>
-                    <p><strong>Costo inicial:</strong></p>
-                    <div class="stat-value">$4,429.15</div>
+                <div class="conclusion-card">
+                    <h3>🌊 BFS</h3>
+                    <p>Encuentra la ruta más corta en cantidad de pasos. Utiliza una estructura de datos tipo Queue (FIFO) para explorar nivel por nivel.</p>
                 </div>
                 
-                <div class="result-card">
-                    <h3>📈 Confiabilidad del Modelo</h3>
-                    <p><strong>R² =</strong> <span class="stat-value">0.9779</span></p>
-                    <div class="confidence-bar">
-                        <div class="confidence-fill" style="width: 97.79%"></div>
-                    </div>
-                    <p><strong>97.79% de confiabilidad</strong></p>
+                <div class="conclusion-card">
+                    <h3>⚖️ UCS</h3>
+                    <p>Encuentra la ruta de menor costo total. Utiliza una cola de prioridad para explorar siempre el nodo con menor costo acumulado.</p>
                 </div>
             </div>
             
-            <!-- Gráfico -->
-            <div class="chart-container fade-in">
-                <h3>📊 Diagrama de Dispersión y Línea de Regresión</h3>
-                <canvas id="regressionChart" width="400" height="200"></canvas>
-            </div>
-            
-            <!-- Estadísticas descriptivas -->
-            <div class="chart-container fade-in">
-                <h3>📊 Estadísticas Descriptivas de Precios</h3>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <h4>Media</h4>
-                        <div class="stat-value">$94,512</div>
-                    </div>
-                    <div class="stat-item">
-                        <h4>Mediana</h4>
-                        <div class="stat-value">$95,032</div>
-                    </div>
-                    <div class="stat-item">
-                        <h4>Moda</h4>
-                        <div style="font-size: 0.9em;">No hay moda</div>
-                        <div style="font-size: 0.8em;">(todos únicos)</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Tabla de datos -->
-            <div class="table-container fade-in">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Apartamento</th>
-                            <th>Tamaño (m²)</th>
-                            <th>Precio Real ($US)</th>
-                            <th>Precio Predicho ($US)</th>
-                            <th>Error Absoluto ($US)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataTable">
-                        <!-- Se llena con JavaScript -->
-                    </tbody>
-                </table>
-            </div>
+           
         </div>
     </div>
 
     <script>
-        // Datos originales
-        const data = [
-            { size: 85, price: 51100 },
-            { size: 97, price: 59260 },
-            { size: 120, price: 69700 },
-            { size: 145, price: 88985 },
-            { size: 150, price: 91160 },
-            { size: 151, price: 92663 },
-            { size: 163, price: 97900 },
-            { size: 165, price: 99925 },
-            { size: 168, price: 100900 },
-            { size: 191, price: 113745 },
-            { size: 214, price: 127430 },
-            { size: 240, price: 142280 }
-        ];
+        // Añadir animaciones cuando los elementos entran en vista
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
 
-        // Coeficientes de regresión calculados
-        const m = 557.24;
-        const b = 4429.15;
-
-        // Función para predecir precio
-        function predictPrice(size) {
-            return m * size + b;
-        }
-
-        // Llenar tabla
-        const tableBody = document.getElementById('dataTable');
-        data.forEach((item, index) => {
-            const predicted = predictPrice(item.size);
-            const error = Math.abs(item.price - predicted);
-            
-            const row = tableBody.insertRow();
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${item.size}</td>
-                <td>$${item.price.toLocaleString()}</td>
-                <td>$${Math.round(predicted).toLocaleString()}</td>
-                <td>$${Math.round(error).toLocaleString()}</td>
-            `;
-        });
-
-        // Crear gráfico
-        const ctx = document.getElementById('regressionChart').getContext('2d');
-        
-        // Datos para la línea de regresión
-        const minSize = Math.min(...data.map(d => d.size));
-        const maxSize = Math.max(...data.map(d => d.size));
-        const regressionLine = [];
-        for (let size = minSize; size <= maxSize; size += 5) {
-            regressionLine.push({
-                x: size,
-                y: predictPrice(size)
-            });
-        }
-
-        new Chart(ctx, {
-            type: 'scatter',
-            data: {
-                datasets: [{
-                    label: 'Datos Reales',
-                    data: data.map(d => ({ x: d.size, y: d.price })),
-                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    pointRadius: 8,
-                    pointHoverRadius: 12
-                }, {
-                    label: 'Línea de Regresión',
-                    data: regressionLine,
-                    type: 'line',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                    borderWidth: 3,
-                    pointRadius: 0,
-                    fill: false,
-                    tension: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Relación entre Tamaño y Precio de Apartamentos'
-                    }
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Tamaño (m²)'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Precio ($US)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + (value/1000).toFixed(0) + 'k';
-                            }
-                        }
-                    }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'nearest'
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.8s ease forwards';
                 }
-            }
+            });
+        }, observerOptions);
+
+        // Observar todas las tarjetas de algoritmos
+        document.querySelectorAll('.algorithm-card').forEach(card => {
+            observer.observe(card);
         });
 
-        // Animación de entrada
-        setTimeout(() => {
-            document.querySelectorAll('.fade-in').forEach((el, index) => {
-                setTimeout(() => {
-                    el.style.opacity = '1';
-                    el.style.transform = 'translateY(0)';
-                }, index * 200);
+        // Efecto de escritura para los nodos
+        document.querySelectorAll('.node').forEach((node, index) => {
+            node.style.animationDelay = `${index * 0.1}s`;
+        });
+
+        // Efecto hover para las tarjetas
+        document.querySelectorAll('.algorithm-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-10px) scale(1.02)';
             });
-        }, 100);
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0) scale(1)';
+            });
+        });
     </script>
 </body>
 </html>
